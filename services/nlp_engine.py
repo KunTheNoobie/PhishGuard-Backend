@@ -46,8 +46,8 @@ logger: Final[logging.Logger] = logging.getLogger("phishguard.nlp_engine")
 #   label 0 → "NEGATIVE" (mapped to PHISHING in our domain)
 #   label 1 → "POSITIVE" (mapped to LEGITIMATE)
 _LABEL_MAP: Final[dict[int, str]] = {
-    0: "PHISHING",
-    1: "LEGITIMATE",
+    0: "LEGITIMATE",
+    1: "PHISHING",
 }
 
 
@@ -143,7 +143,7 @@ class SemanticEngine:
         )
         label: str = _LABEL_MAP.get(predicted_class, "UNKNOWN")
         is_malicious: bool = (
-            predicted_class == 0 and confidence >= MALICIOUS_THRESHOLD
+            predicted_class == 1 and confidence >= MALICIOUS_THRESHOLD
         )
 
         return {

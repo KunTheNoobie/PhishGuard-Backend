@@ -60,7 +60,7 @@ DATABASE_PATH: Final[str] = os.getenv(
 # analysis and serves as a placeholder for a production phishing classifier.
 BERT_MODEL_NAME: Final[str] = os.getenv(
     "PHISHGUARD_BERT_MODEL",
-    "textattack/bert-base-uncased-SST-2",
+    "./phishguard_custom_model",
 )
 
 # Confidence threshold above which a DOM payload is flagged as malicious.
