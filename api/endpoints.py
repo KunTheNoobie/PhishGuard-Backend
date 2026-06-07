@@ -2,7 +2,7 @@
 PhishGuard-AI — API Endpoint Router.
 ======================================
 
-Defines the ``/api/v1/analyze/semantics`` endpoint — the primary
+Defines the ``/api/v1/analyse/semantics`` endpoint — the primary
 ingestion point for the browser extension.  The handler orchestrates
 the full analysis pipeline:
 
@@ -66,11 +66,11 @@ _PREVIEW_LENGTH: Final[int] = 200
 
 
 # ==============================================================================
-# POST /api/v1/analyze/semantics
+# POST /api/v1/analyse/semantics
 # ==============================================================================
 
 @router.post(
-    "/analyze/semantics",
+    "/analyse/semantics",
     response_model=AnalysisResponse,
     summary="Analyse a web page for phishing threats",
     description=(
@@ -82,7 +82,7 @@ _PREVIEW_LENGTH: Final[int] = 200
     status_code=200,
 )
 @limiter.limit(RATE_LIMIT)
-async def analyze_semantics(
+async def analyse_semantics(
     payload: WebPayload,
     request: Request,
     background_tasks: BackgroundTasks,

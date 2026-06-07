@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field, HttpUrl
 
 
 class WebPayload(BaseModel):
-    """Canonical inbound payload for the ``/analyze/semantics`` endpoint.
+    """Canonical inbound payload for the ``/analyse/semantics`` endpoint.
 
     Attributes
     ----------

@@ -12,6 +12,7 @@ Thesis Reference  : §4.3 — API Gateway Security Controls
 
 from __future__ import annotations
 
+import hmac
 from typing import Final
 
 from fastapi import Depends, HTTPException, Request, status
@@ -39,6 +40,10 @@ async def verify_api_key(
     Designed for injection via ``Depends(verify_api_key)`` on any router
     or individual endpoint that requires authentication.
 
+    Uses ``hmac.compare_digest()`` to perform a constant-time comparison,
+    mitigating timing side-channel attacks that could leak the secret
+    length or character positions.
+
     Parameters
     ----------
     credentials : HTTPAuthorizationCredentials
@@ -55,10 +60,8 @@ async def verify_api_key(
     HTTPException (401)
         If the token does not match the configured secret.
     """
-    # ── Constant-time comparison would be ideal in production (via
-    #    ``hmac.compare_digest``).  For the thesis prototype we perform
-    #    a direct equality check against the configured secret. ──
-    if credentials.credentials != API_SECRET_TOKEN:
+    # ── Constant-time comparison to prevent timing side-channel attacks ──
+    if not hmac.compare_digest(credentials.credentials, API_SECRET_TOKEN):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={

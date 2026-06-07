@@ -109,7 +109,7 @@ class DataBlock(BaseModel):
 # ==============================================================================
 
 class AnalysisResponse(BaseModel):
-    """Unified response envelope for the ``/analyze/semantics`` endpoint.
+    """Unified response envelope for the ``/analyse/semantics`` endpoint.
 
     The ``orchestration`` field carries a directive that the browser
     extension's content-script interprets:

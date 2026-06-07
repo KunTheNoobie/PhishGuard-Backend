@@ -55,6 +55,20 @@ CREATE TABLE IF NOT EXISTS threat_telemetry (
 );
 """
 
+# ── Explicit B-Tree Indexes (§4.4) ──
+# SQLite's UNIQUE constraint on account_number creates an implicit index,
+# but we declare it explicitly for clarity and to align with the thesis.
+# The malicious_url index accelerates threat-intelligence lookups.
+_IDX_MULE_ACCOUNT: Final[str] = """
+CREATE INDEX IF NOT EXISTS idx_mule_account_number
+    ON mule_registry (account_number);
+"""
+
+_IDX_TELEMETRY_URL: Final[str] = """
+CREATE INDEX IF NOT EXISTS idx_telemetry_malicious_url
+    ON threat_telemetry (malicious_url);
+"""
+
 # ==============================================================================
 # Seed Data — Dummy Scammer Accounts
 # ==============================================================================
@@ -102,6 +116,10 @@ async def initialize_database() -> aiosqlite.Connection:
     # ── DDL: Create tables idempotently ──
     await db.execute(_DDL_MULE_REGISTRY)
     await db.execute(_DDL_THREAT_TELEMETRY)
+
+    # ── Create B-Tree indexes for O(log N) lookups (§4.4) ──
+    await db.execute(_IDX_MULE_ACCOUNT)
+    await db.execute(_IDX_TELEMETRY_URL)
 
     # ── Seed: Insert dummy mule accounts (ignored on conflict) ──
     for account in _SEED_MULE_ACCOUNTS:

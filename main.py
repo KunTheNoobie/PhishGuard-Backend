@@ -29,15 +29,18 @@ from __future__ import annotations
 
 import logging
 import sys
+import time
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, Final
 
+import torch
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler  # type: ignore[import-untyped]
 from slowapi.errors import RateLimitExceeded  # type: ignore[import-untyped]
 from slowapi.util import get_remote_address  # type: ignore[import-untyped]
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from api.endpoints import router as analysis_router
 from core.config import (
@@ -171,6 +174,35 @@ app: Final[FastAPI] = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+
+# ── Global Exception Handler: PyTorch / CUDA Inference Errors (§4.5) ──
+@app.exception_handler(RuntimeError)
+async def pytorch_runtime_error_handler(
+    request: Request, exc: RuntimeError
+) -> JSONResponse:
+    """Catch PyTorch/CUDA RuntimeErrors (e.g., OOM) and return a
+    structured 503 response instead of a raw 500."""
+    error_msg = str(exc).lower()
+    if "cuda" in error_msg or "out of memory" in error_msg:
+        logger.critical("CUDA Out-of-Memory during inference: %s", exc)
+        # Attempt to free cached GPU memory
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        return JSONResponse(
+            status_code=503,
+            content={
+                "error": "MODEL_INFERENCE_FAILURE",
+                "message": (
+                    "The AI inference engine encountered a memory allocation "
+                    "failure.  Please retry the request or contact your "
+                    "PhishGuard administrator."
+                ),
+            },
+        )
+    # Re-raise non-CUDA RuntimeErrors to the default handler
+    raise exc
+
+
 # ── CORS Middleware (restrict in production) ──
 app.add_middleware(
     CORSMiddleware,
@@ -179,6 +211,28 @@ app.add_middleware(
     allow_methods=["POST"],
     allow_headers=["Authorization", "Content-Type"],
 )
+
+
+# ── Request Logging Middleware ──
+class RequestLoggingMiddleware(BaseHTTPMiddleware):
+    """Logs the method, path, status code, and latency of every request."""
+
+    async def dispatch(self, request: Request, call_next):
+        start = time.perf_counter_ns()
+        response = await call_next(request)
+        elapsed_ms = round((time.perf_counter_ns() - start) / 1_000_000, 2)
+        logger.info(
+            "%s %s → %d (%.2f ms)",
+            request.method,
+            request.url.path,
+            response.status_code,
+            elapsed_ms,
+        )
+        return response
+
+
+app.add_middleware(RequestLoggingMiddleware)
+
 
 # ── Mount the API router ──
 app.include_router(analysis_router)
