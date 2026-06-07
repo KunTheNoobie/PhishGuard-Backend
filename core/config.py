@@ -24,7 +24,7 @@ APP_DESCRIPTION: Final[str] = (
     "Enterprise-grade, real-time Anti-Phishing Browser Security Suite. "
     "Performs semantic NLP analysis and mule-account scanning on raw DOM payloads."
 )
-APP_VERSION: Final[str] = "1.0.0"
+APP_VERSION: Final[str] = "2.0.0"
 
 # ==============================================================================
 # 2. SECURITY CONSTANTS
@@ -56,15 +56,15 @@ DATABASE_PATH: Final[str] = os.getenv(
 # 5. ML / NLP ENGINE
 # ==============================================================================
 # Hugging Face model identifier — used during the lifespan cold-start.
-# `textattack/bert-base-uncased-SST-2` is a fine-tuned BERT for sentiment
-# analysis and serves as a placeholder for a production phishing classifier.
+# Points to the PhishGuard custom fine-tuned BERT model trained on a
+# 500K phishing URL dataset for binary classification (LEGITIMATE / PHISHING).
 BERT_MODEL_NAME: Final[str] = os.getenv(
     "PHISHGUARD_BERT_MODEL",
     "./phishguard_custom_model",
 )
 
 # Confidence threshold above which a DOM payload is flagged as malicious.
-# SST-2 label 0 = "negative" (mapped to phishing) at this threshold.
+# label 1 = "PHISHING" at or above this threshold triggers BLOCK_RENDER.
 MALICIOUS_THRESHOLD: Final[float] = float(
     os.getenv("PHISHGUARD_MALICIOUS_THRESHOLD", "0.75")
 )

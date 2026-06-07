@@ -30,3 +30,6 @@ Thumbs.db
 
 # Environment variables
 .env
+
+# ML training checkpoints (not needed in production)
+phishguard_custom_model/checkpoint-*/

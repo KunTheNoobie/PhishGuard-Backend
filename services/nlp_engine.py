@@ -3,9 +3,10 @@ PhishGuard-AI — NLP Semantic Engine Service.
 ==============================================
 
 Encapsulates the Hugging Face ``transformers`` pipeline wrapping a
-fine-tuned BERT model.  The class follows the **Singleton** pattern:
-a single instance is created during the FastAPI ``lifespan`` cold-start
-and shared across all concurrent requests via ``app.state``.
+custom fine-tuned BERT model (trained on 500K phishing URLs).
+The class follows the **Singleton** pattern: a single instance is
+created during the FastAPI ``lifespan`` cold-start and shared across
+all concurrent requests via ``app.state``.
 
 Key Design Decisions
 --------------------
@@ -42,9 +43,9 @@ logger: Final[logging.Logger] = logging.getLogger("phishguard.nlp_engine")
 # ==============================================================================
 # Label Mapping
 # ==============================================================================
-# The ``textattack/bert-base-uncased-SST-2`` model emits:
-#   label 0 → "NEGATIVE" (mapped to PHISHING in our domain)
-#   label 1 → "POSITIVE" (mapped to LEGITIMATE)
+# The PhishGuard custom BERT model (trained on 500K URLs) emits:
+#   label 0 → "LEGITIMATE"  (benign URL)
+#   label 1 → "PHISHING"    (malicious URL)
 _LABEL_MAP: Final[dict[int, str]] = {
     0: "LEGITIMATE",
     1: "PHISHING",
